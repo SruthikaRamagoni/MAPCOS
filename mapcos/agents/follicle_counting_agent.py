@@ -1,14 +1,11 @@
 """
 Follicle Counting Agent
 --------------------------
-Segments follicles as dark, round blobs (Otsu threshold on the darker
-population) and separates touching follicles using a distance-transform +
-local-maxima watershed. This replaced an earlier Hough Circle Transform
-attempt, which struggled on this dataset's blob-shaped (not sharp-edged)
-follicles; both approaches are named in the original architecture diagram.
-
-Outputs follicle count + (x, y, r) locations, which the Grounding Agent
-turns into a mask to compare against the CNN's Grad-CAM region.
+Segments follicles as dark, round blobs (Otsu threshold) and separates
+touching follicles using a distance-transform + local-maxima watershed.
+Every image is resized to a fixed canonical size first, so area/radius
+thresholds mean the same thing regardless of the input image's native
+resolution (this dataset's images vary a lot in size).
 """
 
 import cv2
@@ -23,14 +20,20 @@ from mapcos.config import FOLLICLE_PARAMS, PCOM_THRESHOLD
 class FollicleCountingAgent:
     def __init__(self, params: dict = None, pcom_threshold: int = PCOM_THRESHOLD):
         self.p = {**FOLLICLE_PARAMS, **(params or {})}
-        self.pcom_threshold = pcom_threshold  # Rotterdam PCOM: >=20 follicles per ovary
+        self.pcom_threshold = pcom_threshold
 
     def run(self, image_path: str) -> dict:
-        img_bgr = cv2.imread(image_path)
-        if img_bgr is None:
+        img_bgr_orig = cv2.imread(image_path)
+        if img_bgr_orig is None:
             raise FileNotFoundError(f"Could not read image: {image_path}")
 
         p = self.p
+
+        # --- NEW: normalize to a fixed size before anything else ---
+        canonical_size = p["canonical_size"]  # (width, height)
+        img_bgr = cv2.resize(img_bgr_orig, canonical_size, interpolation=cv2.INTER_AREA)
+        # --------------------------------------------------------------
+
         h, w = img_bgr.shape[:2]
         crop_h = int(h * p["crop_fraction"])
         img_cropped = img_bgr[:crop_h, :]
