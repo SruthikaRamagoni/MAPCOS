@@ -1,25 +1,28 @@
 """
 Lab Agent
 -----------
-FSH, LH, AMH via gradient boosting (XGBoost).
+FSH, LH, AMH using the best classifier chosen by training/train_lab_agent.py
+(Random Forest, XGBoost, SVM or Decision Tree). Any scikit-learn style model
+with predict_proba works.
 """
 
+import joblib
 import pandas as pd
-import xgboost as xgb
 
 
 class LabAgent:
-    def __init__(self, model_path: str = None, model: xgb.XGBClassifier = None):
+    def __init__(self, model_path: str = None, model=None):
         if model is not None:
             self.model = model
-        else:
+        elif str(model_path).endswith(".json"):
+            # legacy XGBoost-only model file
+            import xgboost as xgb
             self.model = xgb.XGBClassifier()
             self.model.load_model(model_path)
+        else:
+            self.model = joblib.load(model_path)
 
     def run(self, lab_values: dict) -> dict:
-        """
-        lab_values: {"fsh": float, "lh": float, "amh": float}
-        """
         fsh = lab_values["fsh"]
         lh = lab_values["lh"]
         amh = lab_values["amh"]
