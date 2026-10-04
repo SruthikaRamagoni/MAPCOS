@@ -10,8 +10,7 @@ BATCH_SIZE = 32
 DATA_DIR_VISION = "/kaggle/input/datasets/anaghachoudhari/pcos-detection-using-ultrasound-images/data"
 DATA_DIR_TABULAR = "/kaggle/input/datasets/prasoonkottarathil/polycystic-ovary-syndrome-pcos"
 
-CNN_MODEL_PATH = "cnn_agent_best.h5"
-LAST_CONV_LAYER = "efficientnetb0"
+
 
 PCOM_THRESHOLD = 20            # Rotterdam PCOM: >=20 follicles per ovary
 ROTTERDAM_CRITERIA_COUNT = 2   # 2-of-3 rule
@@ -66,3 +65,8 @@ SYMPTOMS_RAW_COLUMNS = {
     "hair_loss": "Hair loss(Y/N)",
     "pimples": "Pimples(Y/N)",
 }
+CNN_MODEL_PATH = "cnn_agent_best.h5"
+LAST_CONV_LAYER = "backbone"          # changed from "efficientnetb0" — compare_cnns.py names it this way for all backbones
+
+LAB_MODEL_PATH = "lab_agent_best.joblib"       # changed from .json — now a joblib-saved sklearn-style model
+SYMPTOMS_MODEL_PATH = "symptoms_agent_best.joblib"  # changed from .json
