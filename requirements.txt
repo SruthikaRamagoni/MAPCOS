@@ -9,3 +9,5 @@ matplotlib
 scikit-image
 scipy
 openpyxl
+joblib
+Pillow
