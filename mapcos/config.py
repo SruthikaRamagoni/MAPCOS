@@ -27,16 +27,15 @@ HOUGH_PARAMS = {
 
 # Follicle Counting Agent — watershed segmentation params
 FOLLICLE_PARAMS = {
-    "canonical_size": (225, 225),   # NEW — every image resized to this before processing
     "crop_fraction": 0.88,
     "bilateral_d": 9,
     "bilateral_sigma_color": 75,
     "bilateral_sigma_space": 75,
-    "min_peak_distance": 9,
-    "min_area": 15,
-    "max_area": 500,
-    "min_circularity": 0.4,
-    "border_margin": 3,
+    "min_peak_distance_fraction": 0.045,   # was fixed at 9px, now 4.5% of the shorter side
+    "min_area_fraction": 0.0003,           # was fixed at 15px, now 0.03% of image area
+    "max_area_fraction": 0.012,            # was fixed at 500px, now 1.2% of image area
+    "min_circularity": 0.4,                # unchanged — already scale-independent
+    "border_margin_fraction": 0.015,       # was fixed at 3px, now 1.5% of the shorter side
 }
 # Agreement / Grounding Agent
 GROUNDING_PARAMS = {
