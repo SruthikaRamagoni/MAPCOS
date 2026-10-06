@@ -40,7 +40,7 @@ class GroundingAgent:
             threshold=self.p["heatmap_threshold"]
         )
 
-        orig_h, orig_w = follicle_result["image_shape"]
+        orig_h, orig_w = follicle_result.get("original_image_shape", follicle_result["image_shape"])
         target_h, target_w = target_shape
         scale_x = target_w / orig_w
         scale_y = target_h / orig_h
