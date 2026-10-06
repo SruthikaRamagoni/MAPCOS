@@ -99,10 +99,11 @@ class FollicleCountingAgent:
 
         count = len(locations)
         return {
-            "agent": "follicle_counting",
-            "follicle_count": count,
-            "locations": locations,
-            "image_shape": img_cropped.shape[:2],
-            "meets_pcom_threshold": count >= self.pcom_threshold,
-            "annotated_image": annotated,
-        }
+                "agent": "follicle_counting",
+                "follicle_count": count,
+                "locations": locations,
+                "image_shape": img_cropped.shape[:2],
+                "original_image_shape": (h, w),   # NEW — the full image's size, before cropping
+                "meets_pcom_threshold": count >= self.pcom_threshold,
+                "annotated_image": annotated,
+            }
