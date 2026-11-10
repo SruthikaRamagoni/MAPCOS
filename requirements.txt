@@ -11,3 +11,4 @@ scipy
 openpyxl
 joblib
 Pillow
+networkx
