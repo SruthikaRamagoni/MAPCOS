@@ -1,9 +1,10 @@
+%%writefile /kaggle/working/MAPCOS/mapcos/training/tabular_compare.py
 """
 Reusable helper: compares Random Forest, XGBoost, SVM and Decision Tree on a
 tabular binary-classification problem and picks the best one.
 
 How the comparison is done (so the choice is not made on the test set):
-  1. 5-fold stratified cross-validation on the TRAIN split -> mean +/- std of
+  1. 5-fold stratified cross-validation on the TRAIN split  -> mean +/- std of
      accuracy, precision, recall, F1, specificity and AUC for every model.
   2. The winner is the model with the highest mean CV F1 (ties: mean CV AUC).
   3. All four models are then refit on the full train split and scored once on
@@ -32,7 +33,7 @@ METRICS = ["accuracy", "precision", "recall", "f1", "specificity", "auc"]
 SCORING = {
     "accuracy": "accuracy",
     "precision": make_scorer(precision_score, zero_division=0),
-    "recall": make_scorer(recall_score, zero_division=0),
+    "recall": make_scorer(recall_score, zero_division=0),            # sensitivity
     "f1": make_scorer(f1_score, zero_division=0),
     "specificity": make_scorer(recall_score, pos_label=0, zero_division=0),
     "auc": "roc_auc",
@@ -48,6 +49,7 @@ def candidate_models(y_train, seed=42):
         "XGBoost": xgb.XGBClassifier(
             n_estimators=200, max_depth=4, learning_rate=0.05, eval_metric="logloss",
             scale_pos_weight=neg / max(pos, 1), random_state=seed),
+        # SVM needs scaled inputs, so scaling is part of the model
         "SVM": make_pipeline(
             StandardScaler(),
             SVC(kernel="rbf", probability=True, class_weight="balanced", random_state=seed)),
@@ -87,6 +89,7 @@ def _plot(test_df, path, title):
 
 
 def compare_and_select(X_train, y_train, X_test, y_test, out_dir, tag="model", seed=42):
+    """Returns (best_name, best_model_fitted_on_train, cv_mean_df, test_df)."""
     os.makedirs(out_dir, exist_ok=True)
     y_train = y_train.astype(int)
     y_test = y_test.astype(int)
