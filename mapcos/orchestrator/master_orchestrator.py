@@ -1,18 +1,18 @@
 """
-Master Orchestrator (LangGraph / CrewAI)
--------------------------------------------
-Receives patient input and dispatches tasks to agents in parallel.
+Master Orchestrator
+-------------------
+Receives one patient case and dispatches the agents.
 
-Implemented so far: CNN Classification Agent + Follicle Counting Agent run
-concurrently on the ultrasound image, then their outputs are cross-checked
-by the Grounding Agent.
+Stage 1 (parallel): CNN Classification Agent + Follicle Counting Agent on the
+                    ultrasound image.
+Stage 2           : Grounding Agent cross-checks the two vision outputs.
+Stage 3 (parallel): Lab Agent + Symptoms Agent on the tabular data.
+Stage 4           : Diagnostic Synthesis Agent (Rotterdam 2-of-3 rule), then the
+                    Exclusion Agent (thyroid / prolactin check).
 
-Built to extend: lab_agent, symptoms_agent, synthesis_agent, and
-exclusion_agent are accepted as optional constructor args. When they're
-None (today), the orchestrator stops after grounding and returns that
-result. Once you implement each one, pass it in and the corresponding
-stage below activates automatically — no changes needed to the vision
-agents, the grounding agent, or the code that dispatches them.
+Agents are plain threads (ThreadPoolExecutor); no agent framework is used. The lab,
+symptoms, synthesis and exclusion agents are optional constructor arguments: when one
+is None its stage is skipped and the result stays None.
 """
 
 from concurrent.futures import ThreadPoolExecutor
@@ -25,7 +25,6 @@ class MasterOrchestrator:
         self.cnn_agent = cnn_agent
         self.follicle_agent = follicle_agent
         self.grounding_agent = grounding_agent
-        # Not yet implemented — orchestrator degrades gracefully when these are None.
         self.lab_agent = lab_agent
         self.symptoms_agent = symptoms_agent
         self.synthesis_agent = synthesis_agent
@@ -62,9 +61,12 @@ class MasterOrchestrator:
         patient_input:
             {
                 "image_path": "<path to ultrasound image>",
-                "tabular_data": {                     # optional, used once lab/symptoms agents exist
-                    "lab_values": {...},
-                    "symptoms": {...},
+                "tabular_data": {                      # optional
+                    "lab_values": {"fsh": ..., "lh": ..., "amh": ...},
+                    "symptoms": {"bmi": ..., "cycle_irregular": 0/1, "hair_growth": 0/1,
+                                 "weight_gain": 0/1, "skin_darkening": 0/1,
+                                 "hair_loss": 0/1, "pimples": 0/1},
+                    "exclusion": {"tsh": ..., "prl": ...},   # used by the Exclusion Agent
                 }
             }
         """
@@ -87,13 +89,15 @@ class MasterOrchestrator:
             result["lab"] = tabular["lab"]
             result["symptoms"] = tabular["symptoms"]
 
-        # --- Not yet implemented: Diagnostic Synthesis Agent -------------------
+        # --- Diagnostic Synthesis (Rotterdam 2-of-3) and Exclusion ---------------
         if self.synthesis_agent is not None:
+            td = tabular_data or {}
             result["synthesis"] = self.synthesis_agent.run(
-                grounding_result, result["lab"], result["symptoms"]
-            )
+                vision["cnn"], vision["follicle"], grounding_result,
+                result["lab"], result["symptoms"], td.get("symptoms", {}))
             if self.exclusion_agent is not None:
-                result["exclusion"] = self.exclusion_agent.run(result["synthesis"], result["lab"])
+                result["exclusion"] = self.exclusion_agent.run(
+                    result["synthesis"], td.get("exclusion", {}))
         # -------------------------------------------------------------------------
 
         return result
