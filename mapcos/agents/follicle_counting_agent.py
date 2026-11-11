@@ -133,3 +133,8 @@ class FollicleCountingAgentV2:
             "meets_pcom_threshold": count >= self.pcom_threshold,
             "annotated_image": annotated,
         }
+      
+
+
+# Keep the original class name so agents/__init__.py and main.py keep working.
+FollicleCountingAgent = FollicleCountingAgentV2
