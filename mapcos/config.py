@@ -10,12 +10,13 @@ BATCH_SIZE = 32
 DATA_DIR_VISION = "/kaggle/input/datasets/anaghachoudhari/pcos-detection-using-ultrasound-images/data"
 DATA_DIR_TABULAR = "/kaggle/input/datasets/prasoonkottarathil/polycystic-ovary-syndrome-pcos"
 
-
-
-PCOM_THRESHOLD = 20            # Rotterdam PCOM: >=20 follicles per ovary
+# Follicles per ovary treated as polycystic ovarian morphology (PCOM).
+# 12 = original Rotterdam 2003 criterion; the 2023 international guideline uses 20 on
+# modern high-frequency ultrasound. Set the value you cite in the paper.
+PCOM_THRESHOLD = 12
 ROTTERDAM_CRITERIA_COUNT = 2   # 2-of-3 rule
 
-# Follicle Counting Agent — Hough Circle params
+# Follicle Counting Agent - Hough Circle params
 HOUGH_PARAMS = {
     "dp": 1.2,
     "min_dist": 15,
@@ -25,7 +26,7 @@ HOUGH_PARAMS = {
     "max_radius": 25,
 }
 
-# Follicle Counting Agent — watershed segmentation params
+# Follicle Counting Agent - watershed segmentation params
 FOLLICLE_PARAMS = {
     "crop_fraction": 0.88,
     "bilateral_d": 9,
@@ -34,21 +35,20 @@ FOLLICLE_PARAMS = {
     "min_peak_distance_fraction": 0.045,   # was fixed at 9px, now 4.5% of the shorter side
     "min_area_fraction": 0.0003,           # was fixed at 15px, now 0.03% of image area
     "max_area_fraction": 0.012,            # was fixed at 500px, now 1.2% of image area
-    "min_circularity": 0.4,                # unchanged — already scale-independent
+    "min_circularity": 0.4,                # unchanged - already scale-independent
     "border_margin_fraction": 0.015,       # was fixed at 3px, now 1.5% of the shorter side
 }
+
 # Agreement / Grounding Agent
 GROUNDING_PARAMS = {
     "heatmap_threshold": 0.5,      # Grad-CAM value above which a pixel counts as "CNN attention"
-    "iou_agreement_threshold": 0.15,  # IoU rarely gets high here — Grad-CAM is diffuse, follicles are small circles
+    "iou_agreement_threshold": 0.15,  # IoU rarely gets high here - Grad-CAM is diffuse, follicles are small circles
 }
-# Tabular data — Lab & Symptoms agents
+
+# Tabular data - Lab & Symptoms agents
 TABULAR_XLSX_PATH = f"{DATA_DIR_TABULAR}/PCOS_data_without_infertility.xlsx"
 TABULAR_SHEET_NAME = "Full_new"
 TARGET_COLUMN = "PCOS (Y/N)"
-
-LAB_MODEL_PATH = "lab_agent_xgb.json"
-SYMPTOMS_MODEL_PATH = "symptoms_agent_xgb.json"
 
 # Real column names in PCOS_data_without_infertility.xlsx, sheet "Full_new"
 LAB_RAW_COLUMNS = {
@@ -65,8 +65,22 @@ SYMPTOMS_RAW_COLUMNS = {
     "hair_loss": "Hair loss(Y/N)",
     "pimples": "Pimples(Y/N)",
 }
-CNN_MODEL_PATH = "cnn_agent_best.h5"
-LAST_CONV_LAYER = "backbone"          # changed from "efficientnetb0" — compare_cnns.py names it this way for all backbones
 
-LAB_MODEL_PATH = "lab_agent_best.joblib"       # changed from .json — now a joblib-saved sklearn-style model
-SYMPTOMS_MODEL_PATH = "symptoms_agent_best.joblib"  # changed from .json
+# Model files
+CNN_MODEL_PATH = "cnn_agent_best.h5"
+LAST_CONV_LAYER = "backbone"          # compare_cnns.py names the backbone wrapper this way for all backbones
+LAB_MODEL_PATH = "lab_agent_best.joblib"            # joblib-saved sklearn-style model
+SYMPTOMS_MODEL_PATH = "symptoms_agent_best.joblib"
+
+# Exclusion Agent - conventional upper reference limits (confirm against your lab's ranges)
+TSH_UPPER = 4.0     # mIU/L
+PRL_UPPER = 25.0    # ng/mL
+
+# Extra columns of PCOS_data_without_infertility.xlsx used by the Exclusion Agent and
+# training/evaluate_synthesis.py
+EXTRA_RAW_COLUMNS = {
+    "tsh": "TSH (mIU/L)",
+    "prl": "PRL(ng/mL)",
+    "follicle_l": "Follicle No. (L)",
+    "follicle_r": "Follicle No. (R)",
+}
