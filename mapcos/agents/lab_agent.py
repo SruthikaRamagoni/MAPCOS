@@ -26,7 +26,7 @@ class LabAgent:
         fsh = lab_values["fsh"]
         lh = lab_values["lh"]
         amh = lab_values["amh"]
-        fsh_lh_ratio = fsh / lh if lh != 0 else 0.0
+        fsh_lh_ratio = fsh / (lh if lh != 0 else 1e-6)   # same as training
 
         features = pd.DataFrame([{
             "fsh": fsh, "lh": lh, "fsh_lh_ratio": fsh_lh_ratio, "amh": amh
