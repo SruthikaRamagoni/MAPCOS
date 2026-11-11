@@ -1,4 +1,4 @@
-%%writefile /kaggle/working/MAPCOS/mapcos/training/tabular_compare.py
+
 """
 Reusable helper: compares Random Forest, XGBoost, SVM and Decision Tree on a
 tabular binary-classification problem and picks the best one.
